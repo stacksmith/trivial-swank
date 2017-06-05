@@ -1,7 +1,7 @@
 (asdf:defsystem #:trivial-swank
   :description "swank server communications"
   :author "StackSmith <fpgasm@apple2.x10.mx>"
-  :license "BSD"
+  :license "BSD simplified"
   :depends-on
    (#:usocket
     #:bordeaux-threads           
