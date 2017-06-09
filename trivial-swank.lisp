@@ -14,8 +14,7 @@
 
 ;;; prevent reader errors
 
-(eval-when (:compile-toplevel :load-toplevel)
-  (swank:swank-require '(swank-presentations swank-repl)))
+;;(eval-when (:compile-toplevel :load-toplevel)  (swank:swank-require '(swank-presentations swank-repl)))
 
 
 ;;=============================================================================
@@ -120,7 +119,7 @@ forms to fallback  processor."
 		    ;; socket may have been destroyed
 		      (when (eq state :closing)
 			(usocket:socket-close socket)
-			;;(print "swank connection closed");;;;
+			(print "swank connection closed");;;;
 			(return-from waiter))
 		      (when (message-waiting-p connection)
 			(message-process connection
@@ -152,8 +151,7 @@ forms to fallback  processor."
     (replace final prefix); insert 6 bytes of length
     (replace final payload :start1 6)
     (write-sequence final stream)
- (format t "~&>>>[~A]~&" string)
-;    (log? "~%-->: [~A][~A]~&" paylen string)
+    (v:info :packet ">>>[~A]~&" string)
     string))
 
 
@@ -166,7 +164,7 @@ forms to fallback  processor."
       (read-sequence arr stream)
 ;      (log? "~%<--: [~A][~A]~&" paylen (utf8-decode arr))
       (let ((val (utf8-decode arr)))
- (format t "~&<<<[~A]~&" val)
+	(v:info :packet "<<<[~A]~&" val)
 	val))))
 
 ;;==============================================================================
