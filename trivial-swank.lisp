@@ -28,15 +28,23 @@
   "return the next continuation id"
   (fill-pointer (rexs connection)))
 
-
+;;=============================================================================
+;; It is useful to log the communications stream... 
+(defparameter *msg-output* nil)
+(defmacro msg (&rest rest)
+  `(format *msg-output* ,@rest))
 ;;=============================================================================
 (defclass connection ()
   ((hostname :reader hostname
+	     :accessor hostname
              :initarg :hostname
+	     :initform "localhost"
              :type string
              :documentation "swank host")
-   (port :reader port
+   (port :reader port 
+	 :accessor port
          :initarg :port
+	 :initform 4005
          :type integer
          :documentation "swank port")
    
@@ -93,7 +101,7 @@
 ;;
 (defun default-fallback (connection forms)
   (declare (ignore connection))
-  (format *standard-output* "~%default connection fallback: ~a~%" forms))
+  (msg * "~%default connection fallback: ~a~%" forms))
 
 (defun connect (connection &key (fallback #'default-fallback)
 			     out pack)
@@ -119,7 +127,7 @@ forms to fallback  processor."
 		    ;; socket may have been destroyed
 		      (when (eq state :closing)
 			(usocket:socket-close socket)
-			(print "swank connection closed");;;;
+			(msg "swank connection closed");;;;
 			(return-from waiter))
 		      (when (message-waiting-p connection)
 			(message-process connection
@@ -151,7 +159,7 @@ forms to fallback  processor."
     (replace final prefix); insert 6 bytes of length
     (replace final payload :start1 6)
     (write-sequence final stream)
-    (v:info :packet ">>>[~A]~&" string)
+    (msg ">>>[~A]~&" string)
     string))
 
 
@@ -162,9 +170,8 @@ forms to fallback  processor."
     (let ((paylen (parse-integer (utf8-decode arr) :radix 16)))
       (setf arr (make-array paylen :element-type '(unsigned-byte 8)))
       (read-sequence arr stream)
-;      (log? "~%<--: [~A][~A]~&" paylen (utf8-decode arr))
       (let ((val (utf8-decode arr)))
-	(v:info :packet "<<<[~A]~&" val)
+	(msg "<<<[~A]~&" val)
 	val))))
 
 ;;==============================================================================
@@ -191,12 +198,11 @@ forms to fallback  processor."
 
 (defun default-rex-proc (connection reply id);rex-callback
   (declare (ignore connection))
-  (format t "~%default swank reply handler for id ~a: ~a~&" id reply))
+  (msg "~%default swank reply handler for id ~a: ~a~&" id reply))
 
 ;;------------------------------------------------------------------------------
 ;; generic rex requests have the form thrown out
 (defun emacs-rex (connection string &key (proc #'default-rex-proc) (thread t))
-  (print string)
   (when string
     (with-slots (pkg rexs) connection
       (send-message-string
@@ -224,11 +230,11 @@ forms to fallback  processor."
 ;; non-rex
 ;;
 ;; this one is for read-line...
-(defun emacs-return-string (connection string id tag)
-  "send a string to the server's standard input."
+(defun emacs-return-string (connection string id tag )
+  "send a string to the server's standard input, appending a newline"
   (send-message-string
    connection
-   (format nil "(:emacs-return-string ~a ~a ~s)" id tag string)))
+   (format nil "(:emacs-return-string ~a ~a \"~a~&\")" id tag string)))
 
 
 ;;==============================================================================
@@ -246,13 +252,10 @@ forms to fallback  processor."
 	  ;; (:return (ok/abort data) id)
 	  (destructuring-bind (reply id) (cdr message)
 	    (let ((rex (aref rexs id)))
-	      
 	      (funcall (rex-proc rex) connection reply id)
 	      (setf rexid  id; remember last rex processed
-		    histid nil));and reset history 
-	    ))
-	(t  (funcall fallback connection message)))
-      ))
+		    histid nil))));and reset history 
+	(t  (funcall fallback connection message)))))
  
 )
 ;;==============================================================================

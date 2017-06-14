@@ -7,7 +7,7 @@
     #:bordeaux-threads           
     #-(or allegro ccl clisp sbcl) ;for systems with no Unicode
     #:trivial-utf-8
-    #:verbose)
+    )
    
   :serial t
   :components (

@@ -4,7 +4,8 @@
   (:nicknames :swa)
   (:use :cl)
   (:shadow cl:eval)
-  (:export :connection :make-connection
+  (:export :*msg-output*
+	   :connection :make-connection
            :hostname
            :port
            :pkg
