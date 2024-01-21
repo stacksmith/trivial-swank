@@ -60,11 +60,11 @@
    ;history
    (histid  :accessor histid
             :initform nil
-            :type fixnum
+            :type (or null fixnum)
             :documentation "history-tracking id")
    (rexid   :accessor rexid
             :initform nil
-            :type fixnum
+            :type (or null fixnum)
             :documentation "last-processed rex id")
    
    (socket :accessor socket
